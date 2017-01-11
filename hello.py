@@ -615,6 +615,27 @@ def testcanvasandajax():
     #print "i love jquery"
     return render_template("testcanvasandajax.html");
 
+#-------------------python test github syn----------------
+'''
+there , iwant to test when page run canvas,
+if page send http request to server
+
+'''
+@app.route('/testgithub', methods=['GET','POST'])
+def testgithub():
+    #user =  request.form['username'];
+    #password = request.form['password'];
+    #print user,password
+    #print "i love jquery"
+    return "test github success"
+
+
+
+
+
+
+
+
 
 
 
