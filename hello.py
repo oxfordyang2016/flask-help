@@ -617,16 +617,11 @@ def testcanvasandajax():
 
 #-------------------python test github syn----------------
 '''
-there , iwant to test when page run canvas,
-if page send http request to server
-
+ i test github windows and linux syn
+ https://github.com/oxfordyang2016/flask-help
 '''
 @app.route('/testgithub', methods=['GET','POST'])
 def testgithub():
-    #user =  request.form['username'];
-    #password = request.form['password'];
-    #print user,password
-    #print "i love jquery"
     return "test github success"
 
 
