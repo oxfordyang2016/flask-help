@@ -34,6 +34,7 @@
         var dynamic = 20;
         var x;
         var y;
+        var testdata;
 
          //loop function
          //} donnot need ;
@@ -47,6 +48,7 @@ function ajaxsend(){
             console.log(res.pass);
             console.log(res);
             //alert(res);
+            testdata1=res.testdata
         }
  }
 );}
@@ -57,8 +59,8 @@ function ajaxsend(){
             //this is coordinate(x,y)
            dynamic=dynamic+0.01;
            x = dynamic*1;
-           y = 150+90*Math.sin(0.8*x);
-
+           //y = 150+90*Math.sin(0.8*x);
+           y = testdata1// this is for test canvas part load.this is y vertex;data origin is testjson
             // stop the the animation if it runs out-of-canvas
             if (x>canvas.width || y>canvas.height){
                 c.clearRect(0,0,canvas.width,canvas.height);
@@ -89,7 +91,7 @@ function ajaxsend(){
 
 
         //this is setting interval
-        var myTimer=setInterval(loop,10000);       
+        var myTimer=setInterval(loop,100);       
 
     }); // end $(function(){});
 </script>

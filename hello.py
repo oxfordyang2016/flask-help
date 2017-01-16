@@ -6,6 +6,8 @@ this code reference tutorialpoint
 #-----------------------hello world --------------------------------------
 from flask import Flask,redirect, url_for,request,make_response
 import json
+import random
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -575,9 +577,10 @@ def signUpUser1():
     #user =  request.form['username'];
     #password = request.form['password'];
     #print user,password
+    randomint=random.randint(12,50)#give a random int
     print "i love jquery"
     print(type(json.dumps({'status':'OK','user':'user','pass':'password'})))
-    return json.dumps({'status':'OK','user':'user','pass':'password'});
+    return json.dumps({'status':'OK','user':'user','pass':'password','testdata':randomint});
 
 
 #--------------------PYTHON flask and json---------------------
