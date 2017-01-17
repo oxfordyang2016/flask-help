@@ -588,7 +588,7 @@ def signUpUser5():
     #user =  request.form['username'];
     #password = request.form['password'];
     #print user,password
-    randomint=random.randint(1,50)#give a random int
+    randomint=random.randint(12,50)#give a random int
     print "i love jquery"
     return json.dumps({'testdata1':randomint});
 
