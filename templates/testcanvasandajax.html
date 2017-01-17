@@ -77,10 +77,12 @@ function ajaxsend1(){
             //this is set as argument 
             //this is coordinate(x,y)
            dynamic=dynamic+0.01;
-           x = dynamic*1;
+           //x = dynamic*1;
+           x=testdata1
+           x1=testdata2
            //y = 150+90*Math.sin(0.8*x);
-           y = 150+90*Math.sin(20*testdata1);
-           y1 = 150+90*Math.cos(20*testdata2);
+           y = 150+testdata1+90*Math.sin(20*testdata1);
+           y1 = 150+testdata2+90*Math.cos(20*testdata2);
            // this is for test canvas part load.this is y vertex;data origin is testjson
             // stop the the animation if it runs out-of-canvas
             if (x>canvas.width || y>canvas.height){
@@ -113,7 +115,7 @@ function ajaxsend1(){
            d.beginPath();
            //this is draw arc(x,y,radius,start ,end )
            c.arc(x,y, 1, 0, Math.PI*2, false);
-           d.arc(x,y1, 1, 0, Math.PI*2, false);
+           d.arc(x1,y1, 1, 0, Math.PI*2, false);
            c.fill();
            d.fill();
         }
