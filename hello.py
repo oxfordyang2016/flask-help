@@ -582,6 +582,16 @@ def signUpUser1():
     print(type(json.dumps({'status':'OK','user':'user','pass':'password'})))
     return json.dumps({'status':'OK','user':'user','pass':'password','testdata':randomint});
 
+#--------------------PYTHON flask and json---------------------
+@app.route('/testjson1', methods=['GET','POST'])
+def signUpUser1():
+    #user =  request.form['username'];
+    #password = request.form['password'];
+    #print user,password
+    randomint=random.randint(1,50)#give a random int
+    print "i love jquery"
+    return json.dumps({'testdata':randomint});
+
 
 #--------------------PYTHON flask and json---------------------
 @app.route('/testajax', methods=['GET','POST'])

@@ -28,13 +28,16 @@
     $(function(){
 
         var canvas=document.getElementById("canvas");
+        var canvas1=document.getElementById("canvas1");
         var c=canvas.getContext("2d");
-
+        var d=canvas1.getContext("2d");
         // set the dynamic outside the loop
         var dynamic = 20;
         var x;
         var y;
+        var y1;
         var testdata1;
+        var testdata2;
 
          //loop function
          //} donnot need ;
@@ -52,6 +55,22 @@ function ajaxsend(){
         }
  }
 );}
+
+function ajaxsend1(){
+        $.ajax({
+        url: "http://123.206.232.46:50/testjson1",
+        type: 'GET',
+        dataType: 'json', // added data type
+        success: function(res) {
+          
+            //alert(res);
+            testdata2=res.testdata
+        }
+ }
+);}
+
+
+
         function loop(){
 
             // change dynamic
@@ -60,13 +79,24 @@ function ajaxsend(){
            dynamic=dynamic+0.01;
            x = dynamic*1;
            //y = 150+90*Math.sin(0.8*x);
-           y = testdata1// this is for test canvas part load.this is y vertex;data origin is testjson
+           y = 150+90*Math.sin(0.2*testdata1);
+           y1 = 150+90*Math.sin(0.2*testdata2);
+           // this is for test canvas part load.this is y vertex;data origin is testjson
             // stop the the animation if it runs out-of-canvas
             if (x>canvas.width || y>canvas.height){
                 c.clearRect(0,0,canvas.width,canvas.height);
                 clearInterval(myTimer);
                 alert("animation done!");
             }
+
+            if (x>canvas1.width || y1>canvas1.height){
+                d.clearRect(0,0,canvas1.width,canvas1.height);
+                clearInterval(myTimer);
+                alert("animation done!");
+            }
+
+
+
            // clear the canvas for this loop's animation
            //the below is very important
            /*
@@ -75,12 +105,17 @@ function ajaxsend(){
            //c.clearRect(0,0,canvas.width,canvas.height);
            
            c.fillStyle = 'red';
-           ajaxsend();    
+           d.fillStyle = 'blue';
+           ajaxsend();
+           ajaxsend1();    
            // draw
            c.beginPath();
+           d.beginPath();
            //this is draw arc(x,y,radius,start ,end )
            c.arc(x,y, 1, 0, Math.PI*2, false);
+           d.arc(x,y1, 1, 0, Math.PI*2, false);
            c.fill();
+           d.fill();
         }
 
 
@@ -100,6 +135,7 @@ function ajaxsend(){
 
 <body>
     <canvas id="canvas" width=10000 height=400></canvas>
+    <canvas id="canvas1" width=10000 height=400></canvas>
 <a class="A">Data structure and algrithm<br/></a>
         <li><a href="https://people.ok.ubc.ca/ylucet/DS/Algorithms.html" class="A">Data structure  Visualizations</a></li>
         <li><a href="http://bigocheatsheet.com/" class="A">algorithm complexity sheet</a></li>
