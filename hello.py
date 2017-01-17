@@ -584,7 +584,7 @@ def signUpUser1():
 
 #--------------------PYTHON flask and json---------------------
 @app.route('/testjson1', methods=['GET','POST'])
-def signUpUser2():
+def signUpUser5():
     #user =  request.form['username'];
     #password = request.form['password'];
     #print user,password
