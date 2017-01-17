@@ -584,13 +584,13 @@ def signUpUser1():
 
 #--------------------PYTHON flask and json---------------------
 @app.route('/testjson1', methods=['GET','POST'])
-def signUpUser1():
+def signUpUser2():
     #user =  request.form['username'];
     #password = request.form['password'];
     #print user,password
     randomint=random.randint(1,50)#give a random int
     print "i love jquery"
-    return json.dumps({'testdata':randomint});
+    return json.dumps({'testdata1':randomint});
 
 
 #--------------------PYTHON flask and json---------------------
