@@ -1,6 +1,8 @@
 '''
 this code reference tutorialpoint 
 
+in guide time,please turn off firewall or allow to listen special port
+
 '''
 
 #-----------------------hello world --------------------------------------
