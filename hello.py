@@ -9,10 +9,13 @@ in guide time,please turn off firewall or allow to listen special port
 from flask import Flask,redirect, url_for,request,make_response
 import json
 import random
+import flask_login
+
+
 
 # Initialize the Flask application
 app = Flask(__name__)
-
+app.secret_key = 'super secret string'  # Change this!
 @app.route('/')
 def hello_world():
    return 'Hello World'
@@ -639,9 +642,14 @@ def testcanvasandajax():
 def testgithub():
     return "test github success"
 
+#-----------------flask authentication and login-----------
+@app.route('/login2017', methods=['GET','POST'])
+def login2017():
+    return render_template("login2017.html")
 
-
-
+@app.route('/register', methods=['GET','POST'])
+def sigup2017():
+    return render_template("register.html")
 
 
 
