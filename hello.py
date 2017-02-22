@@ -674,9 +674,10 @@ def registeruser():
     '''
     if request.method == 'POST':
         #get user info
-        username = request.form['username']
-        password = request.form['password']
-        return redirect(url_for('success',name = username))
+        clientusername = request.form['username']
+        clientpassword = request.form['password']
+        cursor.execute("INSERT INTO verifyuser (username,password) VALUES ( "+str(clientusername)+','+str(clientpassword)+" )")
+        return render_template('login2017.html')
         #you must note it will redirect to success view function
     else:
         return render_template("register.html")
