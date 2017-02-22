@@ -676,7 +676,7 @@ def registeruser():
         #get user info
         clientusername = request.form['username']
         clientpassword = request.form['password']
-        cursor.execute("INSERT INTO verifyuser (username,password) VALUES ( "+str(clientusername)+','+str(clientpassword)+" )")
+        cursor.execute("INSERT INTO verifyuser (username,password) VALUES" +"("+str(clientusername)+' , '+str(clientpassword) ")")
         db.commit()
         return render_template('login2017.html')
         #you must note it will redirect to success view function
