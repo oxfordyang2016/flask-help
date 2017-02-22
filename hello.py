@@ -661,27 +661,44 @@ def testgithub():
 def login2017():
     return render_template("login2017.html")
 
-@app.route('/register', methods=['GET','POST'])
+@app.route('/sigup2017', methods=['GET','POST'])
 def sigup2017():
     
     return render_template("register.html")
 
-@app.route('/registeruser', methods=['GET','POST'])
+@app.route('/register', methods=['GET','POST'])
 def registeruser():
     '''
     i think there need 2 logic ,when vweity success,you 
     need to switch a page,else return register
     '''
+    print(request.method)+('============================================>')
     if request.method == 'POST':
         #get user info
         clientusername = request.form['username']
         clientpassword = request.form['password']
-        cursor.execute("INSERT INTO verifyuser (username,password) VALUES" +"("+str(clientusername)+' , '+str(clientpassword) ")")
+        print(clientusername)+('____________________________________________________------------------------------------------------------>')
+        #cursor.execute("INSERT INTO verifyuser (username,password) VALUES" +"("+str(clientusername)+' , '+str(clientpassword)+ ")")
+        cursor.execute("INSERT INTO verifyuser  (username,password) VALUES ('123i99','456')")
         db.commit()
         return render_template('login2017.html')
         #you must note it will redirect to success view function
     else:
         return render_template("register.html")
+
+
+
+@app.route('/cdb', methods=['GET','POST'])
+def cdb():
+     cursor.execute("INSERT INTO verifyuser  (username,password) VALUES ('yangishandsome','456')")
+     db.commit() 
+     return 'ok'
+     
+
+
+
+
+
 
 
 
