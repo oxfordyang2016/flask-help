@@ -24,7 +24,7 @@ def hello_world():
 #----------------------route mode-----------------------------------------
 @app.route('/hello')
 def routetest():
-    print "i have something to say ,please smulate this to build route rule"
+    print ("i have something to say ,please smulate this to build route rule")
     return "i 'm ok"
 
 
@@ -517,13 +517,13 @@ import sqlite3
 try:
     conn = sqlite3.connect('database.db')
 except:
-    print "Opened database successfully";
+    print("Opened database successfully")
 try:
     conn.execute('CREATE TABLE students (name TEXT, addr TEXT, city TEXT, pin TEXT)')
-    print "Table created successfully";
+    print ("Table created successfully")
     conn.close()
 except:
-    print ''
+    print('')
 
 #add data to html
 @app.route('/enternew')
@@ -539,20 +539,20 @@ def addrec():
          addr = request.form['add']
          city = request.form['city']
          pin = request.form['pin']
-         print "this is a bug------------------------------>"            
+         print ("this is a bug------------------------------>")            
          with sql.connect("database.db") as con:
             cur = con.cursor()
             cur.execute("INSERT INTO students (name,addr,city,pin) VALUES (?,?,?,?)",(nm,addr,city,pin) )
             
             con.commit()
             msgfordb = "Recdrd successfully added"
-            print msgfordb
+            print(msgfordb)
       except:
          con.rollback()
          msgfordb = "error in insert operation"
-         print msgfordb
+         print(msgfordb)
       finally:
-         print msgfordb
+         print (msgfordb)
          return render_template("resultfordb.html",msg='ilove')
          con.close()
 
