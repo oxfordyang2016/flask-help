@@ -293,6 +293,7 @@ in a dictionary object and sends it for rendering to result.html.
 
 
 '''
+#how to design login and user manage logic!!!!!!
 '''
            request /form url          student.html                 1.fill subject data
 client-----------------------sever------------------------>client-----------------------
@@ -560,7 +561,7 @@ def addrec():
          msgfordb = "error in insert operation"
          print(msgfordb)
       finally:
-         print (msgfordb)
+         #print (msgfordb)
          return render_template("resultfordb.html",msg='ilove')
          con.close()
 
