@@ -293,8 +293,16 @@ in a dictionary object and sends it for rendering to result.html.
 
 
 '''
+'''
+           request /form url          student.html                 1.fill subject data
+client-----------------------sever------------------------>client-----------------------
+   2.send form data using post  to  sever  /result  api                            1.get form data and  render results 
+--------------------------------------------------------------------------->server----------------------
+   2.send rendered reslut.html
+------------------------------------------>client
+'''
 
-
+#how to get html form data in python
 
 @app.route('/form')
 def student():
