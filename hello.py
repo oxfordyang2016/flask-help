@@ -678,7 +678,7 @@ def registeruser():
         clientusername = request.form['username']
         clientpassword = request.form['password']
         print(clientusername)+('____________________________________________________------------------------------------------------------>')
-        cursor.execute("INSERT INTO verifyuser (username,password) VALUES" +"("+str(clientusername)+","+str(clientpassword)+ ')' )
+        cursor.execute("INSERT INTO verifyuser (username,password) VALUES" +"("+"'"+str(clientusername)+"'"+","+"'"+str(clientpassword)+"'"+ ')' )
         #cursor.execute("INSERT INTO verifyuser  (username,password) VALUES ('123i99','456')")
         db.commit()
         return render_template('login2017.html')
