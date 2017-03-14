@@ -41,7 +41,9 @@ http://localhost:5000/rev/1.1
 
 '''
 
-
+@app.route('/dy')
+def dy():
+    return render_template('home.html')
 
 
 @app.route('/hello/<name>')

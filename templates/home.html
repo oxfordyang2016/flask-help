@@ -1,0 +1,1481 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="X-UA-Compatible" content="IE=8" >
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Cache-Control" content="no-cache" />
+<title>IVP</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+<link href="css/layout.css" rel="stylesheet" type="text/css" />
+<script language="javascript" type="text/javascript" src="js/jquery.min.js"></script>
+<script language="javascript" type="text/javascript" src="js/bootstrap.min.js"></script>
+<script language="javascript" type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script language="javascript" type="text/javascript" src="js/jquery.cookie.js"></script>
+<script language="javascript" type="text/javascript" src="js/linux.js"></script>
+<script language="javascript" type="text/javascript" src="js/common.js"></script>
+<script language="javascript" type="text/javascript" >
+var Get_status_timer = "";
+var Get_board_timer = "";
+var Get_statistic_timer = "";
+var IPENC_OUT_CHAN_MAX = 13;
+var IPDEC_OUT_CHAN_MAX = 8;
+var CPCI_NUM_MAX = 4;
+var Mux_Bitrate = new Array();
+var MV_BOARD_SLOT = new Array();
+$(document).ready(function(){
+	var asiin_list = "";
+	var asiout_list = "";
+	var ipin_dec_list = "";
+	var ipout_dec_list = "";
+	var enceder_list = "";
+	var lnb_list = "";
+	var deceder_list = "";
+	var trm_list = "";
+	var ipin_enc_list = "";
+	var ipout_enc_list = "";
+	var alc_list = "";
+	var fp_list = "";
+	var the_type="";
+
+	if(!valid_cookie()) jump2Top();
+
+	$("td[name='pw_0']").attr("style", "background:green");
+	$("td[name='pw_1']").attr("style", "background:green");
+
+	$("td[name^='bd_']").addClass("active");
+
+	$('#ivp_dialog').modal({
+		backdrop:'static',
+		keyboard:true,
+		show: false,
+	});
+
+	$.blockUI();
+	$.ajax({
+		url: "boardcontroller.cgi",
+		data:"action=get&object=boardmap",
+		async:false,
+		cache: false,
+		success: function(json_txt){
+			var json_obj = JSON.parse(json_txt);
+			if(json_obj.Head.ErrorCode != "0" || json_obj.Body == undefined){
+				return;
+			}
+
+			var dev_info;
+			var dev_slot_tmp;
+			$.each(json_obj.Body, function(dev_slot, dev_type){
+				if(dev_slot.length == "slotX_status".length){
+					return true;
+				}
+
+				dev_slot_tmp = parseInt(dev_slot.substring(4));
+				dev_info = (parseInt(dev_type)<<8)|dev_slot_tmp;
+				
+				var dtype = parseInt(dev_type);
+				switch (dtype){
+					case 0x00:	//CAM	//0x01
+						return true;
+					case 0x01:	//ASI40
+						asiin_list += "</table>";
+						asiin_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						asiin_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*4</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiin_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						asiin_list += "<thead><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></thead>"
+						asiin_list += "<tr><td class='td_title'>ASI1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI3</td></td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td><td name='s"+dev_slot_tmp+"_c2_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI4</td></td><td name='s"+dev_slot_tmp+"_c3_bit'>0</td><td name='s"+dev_slot_tmp+"_c3_pkt_n'>0</td></tr>";
+						asiin_list += "</table></div></div>";
+						the_type = "ASI40,ASI40";
+						break;
+					case 0x02:	//ASI31
+						asiin_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						asiin_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*3</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiin_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						asiin_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></tr></thead>"
+						asiin_list += "<tr><td class='td_title'>ASI1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td><td name='s"+dev_slot_tmp+"_c2_pkt_n'>0</td></tr>";
+						asiin_list += "</table></div></div>";
+
+						asiout_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						asiout_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiout_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:80%'/>";
+						asiout_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th></tr></thead>";
+						asiout_list += "<tr><td class='td_title'>ASI4</td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td></tr>";
+						asiout_list += "</table></div></div>";
+						the_type = "ASI31,ASI31";
+						break;
+					case 0x03:	//ASI22
+						asiin_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						asiin_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiin_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						asiin_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></tr></thead>"
+						asiin_list += "<tr><td class='td_title'>ASI1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						asiin_list += "<tr><td class='td_title'>ASI2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_pkt_n'>0</td></tr>";
+						asiin_list += "</table></div></div>";
+
+						asiout_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						asiout_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiout_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:80%'/>";
+						asiout_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th></tr></thead>";
+						asiout_list += "<tr><td class='td_title'>ASI3</td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI4</td><td name='s"+dev_slot_tmp+"_co1_bit'>0</td></tr>";
+						asiout_list += "</table></div></div>";
+						the_type = "ASI22,ASI22";
+						break;
+					case 0x04:	//ASI13
+						asiin_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						asiin_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiin_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						asiin_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></tr></thead>"
+						asiin_list += "<tr><td class='td_title'>ASI1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						asiin_list += "</table></div></div>";
+
+						asiout_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						asiout_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*3</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiout_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:80%'/>";
+						asiout_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th></tr></thead>";
+						asiout_list += "<tr><td class='td_title'>ASI2</td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI3</td><td name='s"+dev_slot_tmp+"_co1_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI4</td><td name='s"+dev_slot_tmp+"_co2_bit'>0</td></tr>";
+						asiout_list += "</table></div></div>";
+						the_type = "ASI13,ASI13";
+						break;
+					case 0x05:	//ASI04
+						asiout_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						asiout_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ASI*4</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						asiout_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:80%'/>";
+						asiout_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th></tr></thead>";
+						asiout_list += "<tr><td class='td_title' >ASI1</td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI2</td><td name='s"+dev_slot_tmp+"_co1_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI3</td><td name='s"+dev_slot_tmp+"_co2_bit'>0</td></tr>";
+						asiout_list += "<tr><td class='td_title'>ASI4</td><td name='s"+dev_slot_tmp+"_co3_bit'>0</td></tr>";
+						asiout_list += "</table></div></div>";
+						the_type = "ASI04,ASI04";
+						break;
+					case 0x06:{//case 0x10:	//IPM
+						ipin_dec_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						ipin_dec_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP In*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipin_dec_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipin_dec_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></tr></thead>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td><td name='s"+dev_slot_tmp+"_c2_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In4</td><td name='s"+dev_slot_tmp+"_c3_bit'>0</td><td name='s"+dev_slot_tmp+"_c3_pkt_n'>0</td></tr>";
+						ipin_dec_list += "</table></div></div>";
+
+						ipout_dec_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						ipout_dec_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP Out*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipout_dec_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipout_dec_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate1(Kbps)</th><th class='head4'>Bitrate2(Kbps)</th></tr></thead>";
+						for(var iii = 0; iii < IPDEC_OUT_CHAN_MAX; iii++){
+							ipout_dec_list += "<tr><td class='td_title'>Channel"+(iii+1)+"</td><td name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td><td name='s"+dev_slot_tmp+"_co"+iii+"1_bit'>0</td></tr>";
+						}
+						ipout_dec_list += "</table></div></div>";
+						the_type = "IP,IP Dec";
+						break;
+					}
+		
+                                        case 0x28:  //40, ipasim
+					case 0x14:{//case 0x10:	//IPMASI
+						ipin_dec_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						ipin_dec_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP/ASI*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipin_dec_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipin_dec_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Packets Number</th></tr></thead>";
+						ipin_dec_list += "<tr><td class='td_title' name='s"+dev_slot_tmp+"_c0_titl'>IP In1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title' name='s"+dev_slot_tmp+"_c1_titl'>IP In2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td><td name='s"+dev_slot_tmp+"_c2_pkt_n'>0</td></tr>";
+						ipin_dec_list += "<tr><td class='td_title'>IP In4</td><td name='s"+dev_slot_tmp+"_c3_bit'>0</td><td name='s"+dev_slot_tmp+"_c3_pkt_n'>0</td></tr>";					
+						ipin_dec_list += "</table></div></div>";
+
+						ipout_dec_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						ipout_dec_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP Out*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipout_dec_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipout_dec_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate1(Kbps)</th><th class='head4'>Bitrate2(Kbps)</th></tr></thead>";
+						for(var iii = 0; iii < (dtype==0x28?13:IPDEC_OUT_CHAN_MAX); iii++){
+							ipout_dec_list += "<tr><td class='td_title'>Channel"+(iii+1)+"</td><td name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td><td name='s"+dev_slot_tmp+"_co"+iii+"1_bit'>0</td></tr>";
+						}
+						ipout_dec_list += "</table></div></div>";
+						the_type = "IP/ASI,IP/ASI Dec";
+                                                if (dtype == 0x28) {
+                                                  the_type = "IP/ASI,In/Out";
+                                                }
+						break;
+					}
+
+					case 0x07://case 0x11:	//DSDE
+					case 0x08://case 0x12:	//ASDE
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_SDEncoder*2</a><a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></a></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:30%'/><col style='width:25%'/><col style='width:25%'/>";
+						enceder_list += "<thead><tr><th class='head4'>Encoder</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Video Format</th><th class='head4'>Status</th></tr></thead>";
+						enceder_list += "<tr><td class='td_title'>Encoder1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_vfmt'>N/A</td><td name='s"+dev_slot_tmp+"_c0_stat'>N/A</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Encoder2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_vfmt'>N/A</td><td name='s"+dev_slot_tmp+"_c1_stat'>N/A</td></tr>";
+						enceder_list += "</table></div></div>";
+						if(dtype == 0x08){
+							the_type = "SDE,Analog SD Encoder";
+						}else{	
+							the_type = "SDE,Digital SD Encoder";
+						}
+						break;
+					case 0x19://case 0x12:	//DSDE1V
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_SDEncoder*1</a><a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></a></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:30%'/><col style='width:25%'/><col style='width:25%'/>";
+						enceder_list += "<thead><tr><th class='head4'>Encoder</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>Video Format</th><th class='head4'>Status</th></tr></thead>";
+						enceder_list += "<tr><td class='td_title'>Encoder1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_vfmt'>N/A</td><td name='s"+dev_slot_tmp+"_c0_stat'>N/A</td></tr>";
+						enceder_list += "</table></div></div>";
+						the_type = "SDE,Digital SD Encoder";
+						break;
+					case 0x09://case 0x13:	//HDE_R
+					case 0x0A://case 0x19:	//HDE_L
+					case 0x0B://case 0x1A:	//HDE_SL
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_HDEncoder*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:50%'/><col style='width:30%'/>";
+						enceder_list += "<thead><tr><th>Bitrate(Kbps)</th><th>Video Format</th><th>Status</th></tr></thead>";
+						enceder_list += "<tr><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_vfmt'>N/A</td><td name='s"+dev_slot_tmp+"_c0_stat'>N/A</td></tr>";
+						enceder_list += "</table></div></div>";
+						if(dtype == 0x0A){
+							the_type = "HDE,Lower Latency HD Encoder";
+						}else if(dtype == 0x0B){
+							the_type = "HDE,Super Lower Latency HD Encoder";
+						}else{	
+							the_type = "HDE,HD Encoder";
+						}
+						break;
+					case 0x1A:	//lnb-biss
+					case 0x1D://case 0x14:	//LNB S2
+					case 0x0C://case 0x14:	//LNB-S
+						lnb_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						lnb_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_Tuner*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						lnb_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:30%'/><col style='width:25%'/><col style='width:25%'/>";
+						lnb_list += "<thead><tr><th class='head4'>Tuner</th><th class='head4'>Bitrate(Kbps)</th><th class='head4'>PER</th><th class='head4'>BER</th></tr></thead>";
+						lnb_list += "<tr><td class='td_title'>Tuner1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_per'>0.0E-9</td><td name='s"+dev_slot_tmp+"_c0_ber'>0.0E-9</td></tr>";
+						lnb_list += "<tr><td class='td_title'>Tuner2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td><td name='s"+dev_slot_tmp+"_c1_per'>0.0E-9</td><td name='s"+dev_slot_tmp+"_c1_ber'>0.0E-9</td></tr>";
+						lnb_list += "</table></div></div>";
+						the_type = "TUN,Tuner";
+						break;
+					case 0x16://case 0x14:	//LNB-T
+						lnb_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						lnb_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_Tuner*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						lnb_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:80%'/>";
+						lnb_list += "<thead><tr><th class='head4'>Tuner</th><th class='head4'>Bitrate(Kbps)</th></tr></thead>";
+						lnb_list += "<tr><td class='td_title'>Tuner1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						lnb_list += "<tr><td class='td_title'>Tuner2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td></tr>";
+						lnb_list += "</table></div></div>";
+						the_type = "TUN,Tuner-T";
+						break;
+					case 0x0D://case 0x15:	//DDO
+					case 0x0E://case 0x16:	//ADO
+						deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_HDDecoder*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:25%'/><col style='width:25%'/><col style='width:25%'/><col style='width:25%'/>";
+						deceder_list += "<tr><td class='td_title'><b>Bitrate(Kbps)</b></td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td><td class='td_title'><b><abbr title='Decoded Frame'>Decoded</abbr></b></td><td name='s"+dev_slot_tmp+"_co0_dec'>0</td></tr>";
+						deceder_list += "<tr><td class='td_title'><b><abbr title='Displayed Frame'>Displayed</abbr></b></td><td name='s"+dev_slot_tmp+"_co0_disp'>0</td><td class='td_title'><b>I Frame</b></td><td name='s"+dev_slot_tmp+"_co0_ifrm'>0</td></tr>";
+						deceder_list += "<tr><td class='td_title'><b>B Frame</b></td><td name='s"+dev_slot_tmp+"_co0_bfrm'>0</td><td class='td_title'><b>P Frame</b></td><td name='s"+dev_slot_tmp+"_co0_pfrm'>0</td></tr>";
+						deceder_list += "<tr><td class='td_title'><b>Err Frame</b></td><td name='s"+dev_slot_tmp+"_co0_efrm'>0</td><td class='td_title'>N/A</td><td>N/A</td></tr>";
+						deceder_list += "</table></div></div>";
+						if(dtype == 0x0E){
+							the_type = "DEC,Analog Decoder";
+						}else{	
+							the_type = "DEC,Digital Decoder";
+						}
+						break;
+					case 0x0F://case 0x17:	//MDO
+						if(parseInt(dev_type) == 0x0f && (dev_slot_tmp == 0 || dev_slot_tmp == 1 || dev_slot_tmp == 2)
+							&& json_obj.Body["slot"+dev_slot_tmp+"_status"] == "Ready"
+							&& json_obj.Body["slot"+(dev_slot_tmp+3)+"_status"] == "Ready"
+							&& parseInt(json_obj.Body['slot'+(dev_slot_tmp+3)]) == 0x18){	//MDO in L1-L3 && MV in U1-U3
+							;
+						} else {
+							deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+							deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_MDO</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+							deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+							deceder_list += "<tr><td class='td_title'>Windows</td><td name='s"+dev_slot_tmp+"_co0_mod'>0</td></tr>";
+							deceder_list += "<tr><td class='td_title'>Format</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+							deceder_list += "</table></div></div>";
+						}
+						the_type = "MDO,MDO";
+						MV_BOARD_SLOT[MV_BOARD_SLOT.length] = dev_slot_tmp;
+						break;
+					case 0x18://MV
+						if ((dev_slot_tmp == 3 || dev_slot_tmp == 4 || dev_slot_tmp == 5) &&  json_obj.Body["slot"+dev_slot_tmp+"_status"] == "Ready"
+							&& json_obj.Body["slot"+(dev_slot_tmp-3)+"_status"] == "Ready"
+							&& parseInt(json_obj.Body['slot'+(dev_slot_tmp-3)]) == 0x0F) {	//combine
+							deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+							deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+(get_slot(dev_slot_tmp-3)+"+"+get_slot(dev_slot_tmp))+"_MV</a><img src='images/s"+(dev_slot_tmp-2)+"s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+							deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+							deceder_list += "<tr><td class='td_title'>Slot</td><td class='td_title'>Windows</td><td class='td_title'>Format</td></tr>";
+							deceder_list += "<tr><td class='td_title'>"+get_slot(dev_slot_tmp)+"</td><td name='s"+dev_slot_tmp+"_co0_mod'>0</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+							deceder_list += "<tr><td class='td_title'>"+get_slot(dev_slot_tmp-3)+"</td><td name='s"+(dev_slot_tmp-3)+"_co0_mod'>0</td><td name='s"+(dev_slot_tmp-3)+"_co0_fmt'>0</td></tr>";
+							deceder_list += "</table></div></div>";
+						} else {
+							deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+							deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_MV</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+							deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+							deceder_list += "<tr><td class='td_title'>Windows</td><td name='s"+dev_slot_tmp+"_co0_mod'>0</td></tr>";
+							deceder_list += "<tr><td class='td_title'>Format</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+							deceder_list += "</table></div></div>";
+						}
+						the_type = "MV,MultiView";
+						MV_BOARD_SLOT[MV_BOARD_SLOT.length] = dev_slot_tmp;
+						break;
+					case 0x15://case 0x21:	//HDO
+						deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_DDecoder*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:50%'/><col style='width:50%'/>";
+						deceder_list += "<tr><td class='td_title'><b>Bitrate(Kbps)</b></td><td name='s"+dev_slot_tmp+"_co0_bit'>0</td></tr>";
+						deceder_list += "</table></div></div>";
+						the_type = "DEC,HD Decoder(4:2:2)";
+						break;
+					case 0x10://case 0x16:	//TRM
+						the_type = "TRM,TRM";
+						break;
+					case 0x11:{//case 0x17:	//IPM_OUT
+						ipout_enc_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						ipout_enc_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP Out*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipout_enc_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipout_enc_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate1(Kbps)</th><th class='head4'>Bitrate2(Kbps)</th></tr></thead>";
+						for(var iii = 0; iii < IPENC_OUT_CHAN_MAX; iii++){
+							ipout_enc_list += "<tr><td class='td_title'>Channel"+(iii+1)+"</td></td><td name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td><td name='s"+dev_slot_tmp+"_co"+iii+"1_bit'>0</td></tr>";
+						}
+						ipout_enc_list += "</table></div></div>";
+						the_type = "IP,IP Enc Output";
+						break;
+					}
+
+					case 0x13:{//case 0x17:	//IPASI
+						ipout_enc_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						ipout_enc_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_IP/ASI Out*2</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						ipout_enc_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:20%'/><col style='width:40%'/><col style='width:40%'/>";
+						ipout_enc_list += "<thead><tr><th class='head4'>Channel</th><th class='head4'>Bitrate1(Kbps)</th><th class='head4'>Bitrate2(Kbps)</th></tr></thead>";
+						for(var iii = 0; iii < IPENC_OUT_CHAN_MAX; iii++){
+							ipout_enc_list += "<tr><td class='td_title'>Channel"+(iii+1)+"</td><td name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td><td name='s"+dev_slot_tmp+"_co"+iii+"1_bit'>0</td></tr>";
+						}
+
+						ipout_enc_list += "<tr><td class='td_title'>ASI1</td><td colspan='2' name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td>";
+						iii++
+						ipout_enc_list += "<tr><td class='td_title'>ASI2</td><td colspan='2' name='s"+dev_slot_tmp+"_co"+iii+"0_bit'>0</td>";
+
+						ipout_enc_list += "</table></div></div>";
+						the_type = "IP/ASI,IP/ASI Enc Output";
+						break;
+					}
+
+					case 0x1B:	//ALC
+						alc_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_i'><div class='panel-heading'>";
+						alc_list += "<span class='panel-title'><a data-toggle='collapse' href='#in_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_ALC*1</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						alc_list += "<div class='panel-collapse collapse' id='in_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:40%'/><col style='width:60%'/>";
+						alc_list += "<thead><tr><th>Bitrate(Kbps)</th><th>Packets Number</th></tr></thead>";
+						alc_list += "<tr><td name='s"+dev_slot_tmp+"_c0_bit'>0</td><td name='s"+dev_slot_tmp+"_c0_pkt_n'>0</td></tr>";
+						alc_list += "</table></div></div>";
+						the_type = "ALC,Alc";
+						break;
+
+					case 0x1E:	//AVS Dec
+						deceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						deceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_AVSDecoder</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						deceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:45%'/><col style='width:55%'/>";
+						deceder_list += "<tr><td class='td_title'>Output Format</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+						deceder_list += "</table></div></div>";
+						the_type = "AVSD,AVS Decoder";
+						break;
+
+					case 0x1F:	//AVS Trans
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_AVSTanscoder</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+						enceder_list += "<tr><td class='td_title'>Bitrate</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						//deceder_list += "<tr><td class='td_title'>Format</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+						enceder_list += "</table></div></div>";
+						the_type = "AVST,AVS Transcoder";
+						break;
+
+					case 0x20:	//AVS FP
+						fp_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						fp_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_AVSFP</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						fp_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+						fp_list += "<tr><td class='td_title'>Bitrate</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						//fp_list += "<tr><td class='td_title'>Format</td><td name='s"+dev_slot_tmp+"_co0_fmt'>0</td></tr>";
+						fp_list += "</table></div></div>";
+						the_type = "AVSFP,AVS Fingerprint";
+						break;
+
+					case 0x22:	//PSY enc3
+					case 0x26:	//PSY enc1
+					case 0x27:	//PSY enc2
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_MHDEncoder*"+(dtype==0x22?3:(dtype==0x26?1:2))+"</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+						enceder_list += "<tr><td class='td_title'>Channel1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						if (dtype == 0x27) { //dtype != 0x26
+							enceder_list += "<tr><td class='td_title'>Channel2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td></tr>";
+						}
+						/*if (dtype == 0x22) {
+							enceder_list += "<tr><td class='td_title'>Channel3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td></tr>";
+							enceder_list += "<tr><td class='td_title'>Channel4</td><td name='s"+dev_slot_tmp+"_c3_bit'>0</td></tr>";
+						}*/
+						enceder_list += "</table></div></div>";
+						the_type = "MHDE"+(dtype==0x22?3:(dtype==0x26?1:2))+",Multi-HD Encoder";
+						break;
+
+					//case 0x23:	//smip
+
+					case 0x24:	//PSY trans
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_MHDTranscoder*3</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+						enceder_list += "<tr><td class='td_title'>Channel1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Channel2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Channel3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td></tr>";
+						enceder_list += "</table></div></div>";
+						the_type = "MHDT3,Multi-HD Transcoder(3 channels)";
+						break;
+
+					case 0x25:	//PSY trans
+						enceder_list += "<div class='panel panel-default' id='s"+dev_slot_tmp+"_status_o'><div class='panel-heading'>";
+						enceder_list += "<span class='panel-title'><a data-toggle='collapse' href='#out_slot"+dev_slot_tmp+"'><span class='caret'/>"+get_slot(dev_slot_tmp)+"_MHDTranscoder*4</a><img src='images/s"+(dev_slot_tmp+1)+"_syn_on.gif' class='fram_st'/></span></div>";
+						enceder_list += "<div class='panel-collapse collapse' id='out_slot"+dev_slot_tmp+"'><table class='table table-condensed'><col style='width:30%'/><col style='width:70%'/>";
+						enceder_list += "<tr><td class='td_title'>Channel1</td><td name='s"+dev_slot_tmp+"_c0_bit'>0</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Channel2</td><td name='s"+dev_slot_tmp+"_c1_bit'>0</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Channel3</td><td name='s"+dev_slot_tmp+"_c2_bit'>0</td></tr>";
+						enceder_list += "<tr><td class='td_title'>Channel4</td><td name='s"+dev_slot_tmp+"_c3_bit'>0</td></tr>";
+						enceder_list += "</table></div></div>";
+						the_type = "MHDT4,Multi-HD Transcoder(4 channels)";
+						break;
+
+					default:
+						return true;
+				}
+
+				var dev_desc = the_type.split(",");
+				$("td[name='bd_"+dev_slot_tmp+"']").html(get_slot(dev_slot_tmp)+"-<abbr title='"+dev_desc[1]+"'>"+dev_desc[0]+"</abbr>");
+				$("td[name='bd_"+dev_slot_tmp+"']").attr("title", dev_desc[1]);
+				/*$("td[name='bd_"+dev_slot_tmp+"']").removeClass("active");
+				$("td[name='bd_"+dev_slot_tmp+"']").addClass("success");*/
+			});
+			$("td[name='list_input']").append(ipin_dec_list);
+			$("td[name='list_input']").append(asiin_list);
+			$("td[name='list_input']").append(ipin_enc_list);
+			$("td[name='list_input']").append(lnb_list);
+			$("td[name='list_input']").append(enceder_list);
+			$("td[name='list_input']").append(alc_list);
+			//$("td[name='list_input']").append(fp_list);
+
+			$("td[name='list_output']").append(ipout_dec_list);
+			$("td[name='list_output']").append(asiout_list);
+			$("td[name='list_output']").append(ipout_enc_list);
+			$("td[name='list_output']").append(deceder_list);
+			$("td[name='list_output']").append(trm_list);
+
+			$("td[name$='_bit']").parent().addClass("danger");
+			$(".td_title").css("background-color", "#f0f0f0");
+
+			$.unblockUI();
+			get_status();
+			get_board();
+			get_statistic();
+		}
+	});
+});
+
+function open_window(obj, title)
+{
+	$("#ivp_title").html(title);
+	$("#i_open").attr("src", $(obj).data("remote"));
+}
+
+function get_status()
+{
+	if(!valid_cookie()) jump2Top();
+
+	$.getJSON("system.cgi", {action:"get", key:"all", object:"status", id:Math.random()}, function(data){
+		if(data.Head.ErrorCode != "0" || data.Body == undefined){
+			return;
+		}
+
+		$.each(data.Body,function(key,value){
+			if(key == "temp"){
+				$("#s_"+key).html(value+"&#8451;");
+				if(parseInt(value) < 50){
+					$("td[name='s_"+key+"']").removeClass("danger");
+					$("td[name='s_"+key+"']").addClass("success");
+					$("td[name='s_"+key+"']").attr("title", "OK");
+				}else{
+					$("td[name='s_"+key+"']").removeClass("success");
+					$("td[name='s_"+key+"']").addClass("danger");
+					$("td[name='s_"+key+"']").attr("title", "Warn");
+				}
+			}else{
+				if(value == "0"){
+					$("td[name='s_"+key+"']").removeClass("success");
+					$("td[name='s_"+key+"']").addClass("danger");
+					$("td[name='s_"+key+"']").attr("title", "Error");
+				}else{
+					$("td[name='s_"+key+"']").removeClass("danger");
+					$("td[name='s_"+key+"']").addClass("success");
+					$("td[name='s_"+key+"']").attr("title", "OK");
+				}
+				$("#s_"+key).attr("src", get_sync(value));
+			}
+		});
+
+		if((parseInt(data.Body.genlock)&0x01) == 1){
+			$("#gl_format").html(get_genlock_fmt(data.Body.gl_format));
+			$("#gl_format").show();
+			$("#s_genlock").hide();
+
+			$("td[name='s_genlock']").removeClass("danger");
+			$("td[name='s_genlock']").addClass("success");
+			$("td[name='s_genlock']").attr("title", "OK");
+		}else{
+			$("#gl_format").hide();
+			$("#s_genlock").show();
+
+			$("td[name='s_genlock']").removeClass("success");
+			$("td[name='s_genlock']").addClass("danger");
+			$("td[name='s_genlock']").attr("title", "Error");
+			$("#s_genlock").attr("src", get_sync("0"));
+		}
+
+		Get_status_timer = setTimeout("get_status()", 5000);
+	});
+}
+
+function get_genlock_fmt(fmt)
+{
+	var format;
+
+	switch(parseInt(fmt)){
+		case 3:
+			format = "601 525i";
+			break;
+		case 4:
+			format = "601 625i";
+			break;
+		case 7:
+			format = "480i59.94";
+			break;
+		case 8:
+			format = "576i50";
+			break;
+		case 10:
+			format = "576p50";
+			break;
+		case 11:
+			format = "720p60";
+			break;
+		case 12:
+			format = "720p59.94";
+			break;
+		case 13:
+			format = "720p50";
+			break;
+		case 14:
+			format = "720p30";
+			break;
+		case 15:
+			format = "720p29.97";
+			break;
+		case 16:
+			format = "720p25";
+			break;
+		case 17:
+			format = "720p24";
+			break;
+		case 18:
+			format = "720p23.98";
+			break;
+		case 19:
+			format = "1035i60";
+			break;
+		case 20:
+			format = "1035i59.94";
+			break;
+		case 21:
+			format = "1080p60";
+			break;
+		case 22:
+			format = "1080p59.94";
+			break;
+		case 23:
+			format = "1080p50";
+			break;
+		case 25:
+			format = "1080i60";
+			break;
+		case 26:
+			format = "1080i59.94";
+			break;
+		case 27:
+			format = "1080i50";
+			break;
+		//case 28:
+		case 29:
+			format = "1080p30";
+			break;
+		case 30:
+			format = "1080psf30";
+			break;
+		case 31:
+			format = "1080p29.97";
+			break;
+		case 32:
+			format = "1080psf29.97";
+			break;
+		case 33:
+			format = "1080p25";
+			break;
+		case 34:
+			format = "1080psf25";
+			break;
+		case 35:
+			format = "1080p24";
+			break;
+		case 36:
+			format = "1080psf24";
+			break;
+		case 37:
+			format = "1080p23.98";
+			break;
+		case 38:
+			format = "1080psf23.98";
+			break;
+		default:
+			format = "Unknown";
+	}
+
+	return format;
+}
+
+function get_board()
+{
+	$.get("boardcontroller.cgi?action=get&object=boardmap&id="+Math.random(), function(json_txt){
+		var json_obj = JSON.parse(json_txt);
+		if(json_obj.Head.ErrorCode != "0" || json_obj.Body == undefined){
+			return;
+		}
+
+		$.each(json_obj.Body, function(dev_slot, dev_status){
+			if(dev_slot.length != "slotx_status".length){
+				return true;
+			}
+
+			var dev_slot_tmp = parseInt(dev_slot.substring(4));
+			if(dev_status == "Ready"){
+				if(!$("td[name='bd_"+dev_slot_tmp+"']").hasClass("success")){
+					$("td[name='bd_"+dev_slot_tmp+"']").removeClass("danger active default");
+					$("td[name='bd_"+dev_slot_tmp+"']").addClass("success");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").removeClass("panel-danger panel-active panel-default");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").addClass("panel-success");
+				}
+			}else if(dev_status == "Inserted"){
+				if(!$("td[name='bd_"+dev_slot_tmp+"']").hasClass("danger")){
+					$("td[name='bd_"+dev_slot_tmp+"']").removeClass("success active default");
+					$("td[name='bd_"+dev_slot_tmp+"']").addClass("danger");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").removeClass("panel-success panel-active panel-default");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").addClass("panel-danger");
+				}
+			}else{
+				if(!$("td[name='bd_"+dev_slot_tmp+"']").hasClass("active")){
+					$("td[name='bd_"+dev_slot_tmp+"']").removeClass("success danger default");
+					$("td[name='bd_"+dev_slot_tmp+"']").addClass("active");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").removeClass("panel-danger panel-success panel-default");
+					$("div[id^='s"+dev_slot_tmp+"_status_']").addClass("panel-active");
+				}
+			}
+		});
+
+		Get_board_timer = setTimeout("get_board()", 5000);
+	});
+}
+
+function get_statistic()
+{
+	$.get("boardcontroller.cgi?action=get&object=statistic&slot=all&id="+Math.random(), function(json_txt){
+		var json_obj = JSON.parse(json_txt);
+		if(json_obj.Head.ErrorCode != "0" || json_obj.Body == undefined){
+			//alert("error message:"+json_obj.Head.Message);
+			return;
+		}
+
+		var jjj;
+		for(var iii = 0; iii < json_obj.Body.num; iii++){
+			var slot = json_obj.Body.statistic[iii].slot;
+                        var type = json_obj.Body.statistic[iii].type;
+			switch(type){
+				//case 0x00:	//CAM	//0x01
+				case 0x01:	//ASI40
+				case 0x02:	//ASI31
+				case 0x03:	//ASI22
+				case 0x04:	//ASI13
+				case 0x05:{	//ASI04
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+
+					if(json_obj.Body.statistic[iii].o_info == undefined){
+						break;
+					}
+
+					var input_num = jjj
+					for(jjj = 0; jjj < CPCI_NUM_MAX-input_num; jjj++){
+						//$("img[name='s"+slot+"_co"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].o_info[jjj].sync == 1){
+							$("td[name='s"+slot+"_co"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].o_info[jjj].bitrate/1000)));
+							//$("td[name='s"+slot+"_co"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].o_info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_co"+jjj+"_bit']").html(0);
+							//$("td[name='s"+slot+"_co"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_co"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					break;
+				}
+				
+				case 0x06:{//case 0x10:	//IPM
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_co"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_co"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+
+					var instance = 0;
+					var channel;
+					$.each(json_obj.Body.statistic[iii].o_info, function(j_key, j_val){
+						channel = 0;
+						$.each(j_val, function(t_key, t_val){
+							$.each(t_val, function(tm_key, tm_val){
+								//$("img[name='s"+slot+"_c"+channel+instance+"_sync']").attr("src", get_sync(tm_val.en));
+								if(tm_val.en == 1){
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(addCommas(Math.floor(tm_val.bitrate/1000)));
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("success")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger")
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("success");
+									}
+								}else{
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(0);
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("danger")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("success");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("danger");
+									}
+								}
+
+								channel++;
+							});
+						});
+						instance++;
+					});
+					break;
+				}
+
+                                case 0x28:  //40,ipasim
+				case 0x14:{//case 0x14:	//IPM_ASI
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						if(jjj == 0 || jjj == 1){
+							if(json_obj.Body.statistic[iii].input_mode1 == 2){
+								$("td[name='s"+slot+"_c0_titl']").html("ASI In1");
+							}else{
+								$("td[name='s"+slot+"_c0_titl']").html("IP In1");
+							}
+
+							if(json_obj.Body.statistic[iii].input_mode2 == 2){
+								$("td[name='s"+slot+"_c1_titl']").html("ASI In2");
+							}else{
+								$("td[name='s"+slot+"_c1_titl']").html("IP In2");
+							}
+						}
+
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					var instance = 0;
+					var channel;
+					$.each(json_obj.Body.statistic[iii].o_info, function(j_key, j_val){
+						channel = 0;
+						$.each(j_val, function(t_key, t_val){
+							$.each(t_val, function(tm_key, tm_val){
+								//$("img[name='s"+slot+"_c"+channel+instance+"_sync']").attr("src", get_sync(tm_val.en));
+								if(tm_val.en == 1){
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(addCommas(Math.floor(tm_val.bitrate/1000)));
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("success")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger")
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("success");
+									}
+								}else{
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(0);
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("danger")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("success");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("danger");
+									}
+								}
+
+								channel++;
+							});
+						});
+						instance++;
+					});
+					break;
+				}
+
+				case 0x19:
+				case 0x07://case 0x11:	//DSDE
+				case 0x08://case 0x12:	//ASDE
+					//for(var jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c0_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[0].sync));
+						if(json_obj.Body.statistic[iii].info[0].sync == 0){
+							$("td[name='s"+slot+"_c0_bit']").html(0);
+							$("td[name='s"+slot+"_c1_bit']").html(0);
+							if(!$("td[name='s"+slot+"_c0_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c0_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c0_bit']").parent().addClass("danger");
+							}
+
+							if(!$("td[name='s"+slot+"_c1_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c1_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c1_bit']").parent().addClass("danger");
+							}
+						}else{
+							$("td[name='s"+slot+"_c0_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[0].bitrate/1000)));
+							if(!$("td[name='s"+slot+"_c0_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c0_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c0_bit']").parent().addClass("success");
+							}
+
+							if(!$("td[name='s"+slot+"_c1_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c1_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c1_bit']").parent().addClass("success");
+							}
+						}
+
+						$("td[name='s"+slot+"_c0_stat']").html(get_sdenc_status(json_obj.Body.statistic[iii].info[0].stat));
+						$("td[name='s"+slot+"_c0_vfmt']").html(get_sdenc_fmt(json_obj.Body.statistic[iii].info[0].vfmt));
+
+						//$("img[name='s"+slot+"_c1_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if (json_obj.Body.statistic[iii].type != 0x19) {	//1V2A
+							$("td[name='s"+slot+"_c1_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[1].bitrate/1000)));
+							$("td[name='s"+slot+"_c1_stat']").html(get_sdenc_status(json_obj.Body.statistic[iii].info[1].stat));
+							$("td[name='s"+slot+"_c1_vfmt']").html(get_sdenc_fmt(json_obj.Body.statistic[iii].info[1].vfmt));
+						}
+					//}
+					break;
+				case 0x09://case 0x13:	//HDE_R
+				case 0x0A://case 0x19:	//HDE_L
+				case 0x0B://case 0x1A:	//HDE_SL
+					for(var jjj = 0; jjj < 1; jjj++){	//json_obj.Body.statistic[iii].input_chan
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+						
+						$("td[name='s"+slot+"_c"+jjj+"_stat']").html(get_enc_status(json_obj.Body.statistic[iii].info[jjj].stat));
+						$("td[name='s"+slot+"_c"+jjj+"_vfmt']").html(get_enc_fmt(json_obj.Body.statistic[iii].info[jjj].vfmt));
+					}
+					break;
+				case 0x1A:	//LNB-BISS
+				case 0x16:	//LNB-T
+				case 0x1D:	//lnb s2
+				case 0x0C://case 0x14:	//LNB
+					for(var jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_c"+jjj+"_per']").html(json_obj.Body.statistic[iii].info[jjj].per+"E-9");
+							$("td[name='s"+slot+"_c"+jjj+"_ber']").html(json_obj.Body.statistic[iii].info[jjj].ber+"E-9");
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_per']").html("0E-9");
+							$("td[name='s"+slot+"_c"+jjj+"_ber']").html("0E-9");
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					break;
+				case 0x0D://case 0x15:	//DDO
+				case 0x0E://case 0x16:	//ADO
+					if($("td[name='s"+slot+"_co0_bit']").parent().hasClass("danger")){
+						$("td[name='s"+slot+"_co0_bit']").parent().removeClass("danger");
+					}
+
+					$("td[name='s"+slot+"_co0_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].o_info[0].bitrate/1000)));
+					$("td[name='s"+slot+"_co0_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].pkt_n));
+					$("td[name='s"+slot+"_co0_dec']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].dec_frm));
+					$("td[name='s"+slot+"_co0_disp']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].dis_frm));
+					$("td[name='s"+slot+"_co0_ifrm']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].i_frm));
+					$("td[name='s"+slot+"_co0_bfrm']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].b_frm));
+					$("td[name='s"+slot+"_co0_pfrm']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].p_frm));
+					$("td[name='s"+slot+"_co0_efrm']").html(addCommas(json_obj.Body.statistic[iii].o_info[0].e_frm));
+					break;
+				/*case 0x0F://case 0x17:	//MDO
+					for(var jjj = 0; jjj < 1; jjj++){
+						$("td[name='s"+slot+"_c"+jjj+"_bit']").html(Math.floor(json_obj.Body.statistic[iii].info[0].bitrate/1000));
+						$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(json_obj.Body.statistic[iii].info[0].pkt_n);
+						$("td[name='s"+slot+"_c"+jjj+"_dec']").html(json_obj.Body.statistic[iii].info[0].dec_frm);
+						$("td[name='s"+slot+"_c"+jjj+"_disp']").html(json_obj.Body.statistic[iii].info[0].dis_frm);
+						//$("td[name='s"+slot+"_c"+jjj+"_ifrm']").html(json_obj.Body.statistic[iii].info[0].i_frm);
+						//$("td[name='s"+slot+"_c"+jjj+"_bfrm']").html(json_obj.Body.statistic[iii].info[0].b_frm);
+						//$("td[name='s"+slot+"_c"+jjj+"_pfrm']").html(json_obj.Body.statistic[iii].info[0].p_frm);
+						$("td[name='s"+slot+"_c"+jjj+"_efrm']").html(json_obj.Body.statistic[iii].info[0].e_frm);
+					}
+					break;*/
+				case 0x15://HDO
+					if($("td[name='s"+slot+"_co0_bit']").parent().hasClass("danger")){
+						$("td[name='s"+slot+"_co0_bit']").parent().removeClass("danger");
+					}
+
+					$("td[name='s"+slot+"_co0_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].o_info[0].bitrate/1000)));
+                                        break;
+				case 0x10://case 0x16:	//TRM
+					break;
+				case 0x11:{//case 0x17:	//IPM_OUT
+					var instance = 0;
+					var channel;
+
+					$.each(json_obj.Body.statistic[iii].o_info, function(j_key, j_val){
+						channel = 0;
+						$.each(j_val, function(t_key, t_val){
+							$.each(t_val, function(tm_key, tm_val){
+								//$("img[name='s"+slot+"_c"+channel+instance+"_sync']").attr("src", get_sync(tm_val.en));
+								if(tm_val.en == 1){
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(addCommas(Math.floor(tm_val.bitrate/1000)));
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("success")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("success");
+									}
+								}else{
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(0);
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("danger")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("success");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("danger");
+									}
+								}
+
+								channel++;
+							});
+						});
+						instance++;
+					});
+					break;
+				}
+
+				case 0x12:{//case 18:	//MUX
+					var instance = 0;
+					$.each(json_obj.Body.statistic[iii].info, function(j_key, j_val){
+						if(json_obj.Body.statistic[iii].info[instance].sync == "0"){
+							Mux_Bitrate[instance] = 0;
+						}else{
+							Mux_Bitrate[instance] = parseInt(json_obj.Body.statistic[iii].info[instance].bitrate);
+						}
+						instance++;
+					});
+					break;
+				}
+
+				case 0x13:{//case 0x17:	//IPASI
+					var instance = 0;
+					var channel;
+					$.each(json_obj.Body.statistic[iii].o_info, function(j_key, j_val){
+						channel = 0;
+						$.each(j_val, function(t_key, t_val){
+							$.each(t_val, function(tm_key, tm_val){
+								//$("img[name='s"+slot+"_c"+channel+instance+"_sync']").attr("src", get_sync(tm_val.en));
+								if(tm_val.en == 1){
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(addCommas(Math.floor(tm_val.bitrate/1000)));
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("success")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("success");
+									}
+								}else{
+									$("td[name='s"+slot+"_co"+channel+instance+"_bit']").html(0);
+									if(!$("td[name='s"+slot+"_co"+channel+instance+"_bit']").hasClass("danger")){
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").parent().removeClass("danger");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").removeClass("success");
+										$("td[name='s"+slot+"_co"+channel+instance+"_bit']").addClass("danger");
+									}
+								}
+								channel++;
+							});
+						});
+						instance++;
+					});
+					break;
+				}
+
+				case 0x1B:	//ALC
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					break;
+
+				case 0x1E:	//AVS Dec
+					if($("td[name='s"+slot+"_co0_bit']").parent().hasClass("danger")){
+						$("td[name='s"+slot+"_co0_bit']").parent().removeClass("danger");
+					}
+
+					var get_avs_fmt = function(type){
+						var fmt;
+						switch (type) {
+							case 0x00:
+								fmt = "1920*1080i60";
+								break;
+							case 0x01:
+								fmt = "1920*1080i50";
+								break;
+							case 0x02:
+								fmt = "1280*720p60";
+							case 0x03:
+								fmt = "1280*720p50";
+							case 0x07:
+								fmt = "720*480i60";
+								break;
+							case 0x06:
+								fmt = "720*576i50";
+								break;
+							default:
+								fmt = "Unknown";
+						}
+						return fmt;
+					};
+					if (json_obj.Body.statistic[iii].o_info[0]) {
+						$("td[name='s"+slot+"_co0_fmt']").html(get_avs_fmt(json_obj.Body.statistic[iii].o_info[0].vid_fmt));
+					}
+					break;
+
+				case 0x1F:	//AVS Trans
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000)));
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					break;
+
+				case 0x20:	//AVS FP
+					for(jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000))+"Kbps");
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(addCommas(json_obj.Body.statistic[iii].info[jjj].pkt_n));
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							$("td[name='s"+slot+"_c"+jjj+"_pkt_n']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+					}
+					break;
+
+				case 0x26://PSY enc1
+				case 0x27://PSY enc2
+				case 0x22://PSY enc3
+				case 0x24://PSY trans3
+				case 0x25://PSY trans4
+					for(var jjj = 0; jjj < json_obj.Body.statistic[iii].input_chan; jjj++){
+						//$("img[name='s"+slot+"_c"+jjj+"_sync']").attr("src", get_sync(json_obj.Body.statistic[iii].info[jjj].sync));
+						if (!json_obj.Body.statistic[iii].info[jjj]) continue;
+						if(json_obj.Body.statistic[iii].info[jjj].sync == 1){
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(addCommas(Math.floor(json_obj.Body.statistic[iii].info[jjj].bitrate/1000))+'Kbps');
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("success")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("danger");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("success");
+							}
+						}else{
+							$("td[name='s"+slot+"_c"+jjj+"_bit']").html(0);
+							if(!$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().hasClass("danger")){
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().removeClass("success");
+								$("td[name='s"+slot+"_c"+jjj+"_bit']").parent().addClass("danger");
+							}
+						}
+						
+						$("td[name='s"+slot+"_c"+jjj+"_stat']").html(get_enc_status(json_obj.Body.statistic[iii].info[jjj].stat));
+						$("td[name='s"+slot+"_c"+jjj+"_vfmt']").html(get_enc_fmt(json_obj.Body.statistic[iii].info[jjj].vfmt));
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		Get_statistic_timer = setTimeout(get_statistic, 2500);
+	});
+
+	/* get mv sta info */
+	for(var mv = 0; mv < MV_BOARD_SLOT.length; mv++){
+		update_mv(MV_BOARD_SLOT[mv])
+	}
+}
+
+function update_mv(idx){
+	$.get("boardcontroller.cgi?action=get&object=slot"+idx+"&key=all&id="+Math.random(), function(json_txt){
+		var json_obj = JSON.parse(json_txt);
+		if(json_obj.Head.ErrorCode != "0" || json_obj.Body == undefined){
+			//alert("error message:"+json_obj.Head.Message);
+			return;
+		}
+
+		var winds = "Unknown";
+		var fmt = "Unknown";
+
+		switch(json_obj.Body.win_mode){
+			case "0":
+				winds = 1;
+				break;
+			case "1":
+				winds = 2;
+				break;
+			case "2":
+				winds = 8;
+				break;
+			case "3":
+				winds = 6;
+				break;
+			case "4":
+				winds = 8;
+				break;
+			case "5":
+				winds = 8;
+				break;
+			case "6":
+				winds = 5;
+				break;
+			case "7":
+				winds = 5;
+				break;
+			case "8":
+				winds = 2;
+				break;
+			case "9":
+				winds = 2;
+				break;
+			default:
+				winds = "Unknown";
+		}
+		$("td[name='s"+idx+"_co0_mod']").html(winds);
+		if(winds == "Unknown"){//err
+			if($("td[name='s"+idx+"_co0_mod']").hasClass("success")){
+				$("td[name='s"+idx+"_co0_mod']").removeClass("success");
+				$("td[name='s"+idx+"_co0_mod']").addClass("danger");
+			}
+
+			if(!$("td[name='s"+idx+"_co0_mod']").hasClass("danger")){
+				$("td[name='s"+idx+"_co0_mod']").addClass("danger");
+			}
+		}else{	//suc
+			if($("td[name='s"+idx+"_co0_mod']").hasClass("danger")){
+				$("td[name='s"+idx+"_co0_mod']").removeClass("danger");
+				$("td[name='s"+idx+"_co0_mod']").addClass("success");
+			}
+
+			if(!$("td[name='s"+idx+"_co0_mod']").hasClass("success")){
+				$("td[name='s"+idx+"_co0_mod']").addClass("success");
+			}
+		}
+
+		switch(json_obj.Body.Output_Format){
+			case "6":
+				fmt = "1080i50";
+				break;
+			case "8":
+				fmt = "1080i59.94";
+				break;
+			case "7":
+				fmt = "1080i60";
+				break;
+			default:
+				fmt = "Unknown";
+		}
+		$("td[name='s"+idx+"_co0_fmt']").html(fmt);
+		if(fmt == "Unknown"){
+			if($("td[name='s"+idx+"_co0_fmt']").hasClass("success")){
+				$("td[name='s"+idx+"_co0_fmt']").removeClass("success");
+			}
+			if(!$("td[name='s"+idx+"_co0_fmt']").hasClass("danger")){
+				$("td[name='s"+idx+"_co0_fmt']").addClass("danger");
+			}
+		}else{
+			if($("td[name='s"+idx+"_co0_fmt']").hasClass("danger")){
+				$("td[name='s"+idx+"_co0_fmt']").removeClass("danger");
+			}
+			if(!$("td[name='s"+idx+"_co0_fmt']").hasClass("success")){
+				$("td[name='s"+idx+"_co0_fmt']").addClass("success");
+			}
+		}
+	});
+}
+
+function get_sync(sync)
+{
+	var src;
+
+	if(parseInt(sync) == 0){
+		src="images/sync_off.png";
+	}else{
+		src="images/sync_on.png";
+	}
+
+	return src;
+}
+
+function adapter_page(obj)
+{
+	if($(obj).hasClass("glyphicon-chevron-right")){
+		$("th[name='list_input_h']").removeClass("hidden-xs");
+		$("td[name='list_input']").removeClass("hidden-xs");
+		$("th[name='list_output_h']").addClass("hidden-xs");
+		$("td[name='list_output']").addClass("hidden-xs");
+
+		$(obj).removeClass("glyphicon-chevron-right");
+		$(obj).addClass("glyphicon-chevron-left");
+		$(obj).css({"border-bottom-right-radius":"5px", "border-top-right-radius":"5px", "border-bottom-left-radius":"0px", "border-top-left-radius":"0px"});
+	}else{
+		$("th[name='list_input_h']").addClass("hidden-xs");
+		$("td[name='list_input']").addClass("hidden-xs");
+		$("th[name='list_output_h']").removeClass("hidden-xs");
+		$("td[name='list_output']").removeClass("hidden-xs");
+
+		$(obj).removeClass("glyphicon-chevron-left");
+		$(obj).addClass("glyphicon-chevron-right");
+		$(obj).css({"border-bottom-left-radius":"5px", "border-top-left-radius":"5px", "border-bottom-right-radius":"0px", "border-top-right-radius":"0px"});
+	}
+}
+</script>
+<style type="text/css">
+td.td_title{background-color:#f0f0f0;}
+.panel{border-radius:0px;margin:0px;border-width:0px}
+.panel-heading{padding:5px;border-top-right-radius:0px;border-top-left-radius:0px;}
+.panel-title{font-size:100%;}
+.fram_st{float:right}
+.head4{overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+</style>
+</head>
+<body>
+<form name="home">
+<div class="container-fluid" style="padding:0px;">
+	<table class="table table-bordered table-condensed">
+		<thead>
+			<tr>
+				<th class="col-xs-4 col-sm-4">Frame</th>
+				<th name="list_input_h" class="col-xs-8 col-sm-4">Inputs
+				</th>
+				<th class="visible-xs"></th>
+				<th name="list_output_h" class="hidden-xs col-xs-8 col-sm-4">Outputs
+				</th>
+			</tr>
+		</thead>
+		<tr>
+			<td style="padding:0px;">
+				<table class="table table-nobordered table-condensed">
+					<tr>
+						<td style="padding:0px;border-bottom-width:0px;">
+							<table class="table table-nobordered table-condensed"> 
+								<tr>
+									<td name="bd_3" class="col-xs-4 col-md-4">U1-N/A</td><td name="bd_4" class="col-xs-4 col-md-4">U2-N/A</td><td name="bd_5" class="col-xs-4 col-md-4">U3-N/A</td>
+								</tr>
+								<tr>
+									<td name="bd_0" class="col-xs-4 col-md-4">L1-N/A</td><td name="bd_1" class="col-xs-4 col-md-4">L2-N/A</td><td name="bd_2" class="col-xs-4 col-md-4">L3-N/A</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding:0px;border-bottom-width:0px;">
+							<table class="table table-nobordered  table-condensed">
+								<tr>
+									<td name="s_pw1">Power1<img id="s_pw1" src="images/sync_on.png" class="state pull-right"/></td>
+									<td name="s_pw2">Power2<img id="s_pw2" src="images/sync_on.png" class="state pull-right"/></td>
+								</tr>
+								<tr>
+									<td name="s_fan1"><img id="s_fan1" src="images/sync_on.png" class="state pull-right"/>Fan1</td>
+									<td name="s_fan2"><img id="s_fan2" src="images/sync_on.png" class="state pull-right"/>Fan2</td>
+								</tr>
+								<tr>
+									<td name="s_fan3"><img id="s_fan3" src="images/sync_on.png" class="state pull-right"/>Fan3</td>
+									<td name="s_fan4"><img id="s_fan4" src="images/sync_on.png" class="state pull-right"/>Fan4</td>
+								</tr>
+								<tr>
+									<td name="s_fan5" style="width:50%">Fan5<img id="s_fan5" src="images/sync_on.png" class="state pull-right"/></td>
+									<td name="s_temp" style="width:50%"><abbr title="Temperature">Temp</abbr><span id="s_temp" class="pull-right"/></td>
+								</tr>
+								<!--tr>
+									<td name="s_genlock" colspan="2">Genlock<div class="pull-right"><span id="gl_format"></span><img id="s_genlock" src="images/sync_on.png" class="state"/></div></td>
+								</tr-->
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td>Account
+							<a  data-toggle="modal" data-target="#ivp_dialog" data-remote="system_user.html" onclick="open_window(this, 'Account')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-cog" style="float:right;padding:0px"></a>
+						</td>
+					</tr>
+					<tr>
+						<td>Network
+							<a data-toggle="modal" data-target="#ivp_dialog" data-remote="system_0101.html" onclick="open_window(this, 'Network')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-cog" style="float:right;padding:0px"></a>
+						</td>
+					</tr>
+					<tr>
+						<td>Date & Time
+							<a  data-toggle="modal" data-target="#ivp_dialog" data-remote="system_0201.html" onclick="open_window(this, 'Date & Time')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-cog" style="float:right;padding:0px"></a>
+						</td>
+					</tr>
+					<tr>
+						<td>Upgrade & Reboot
+							<a data-toggle="modal" data-target="#ivp_dialog" data-remote="system_0301.html" onclick="open_window(this, 'Upgrade & Reboot')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-cog" style="float:right;padding:0px"></a>
+						</td>
+					</tr>
+					<!--tr>
+						<td class="li_stat">Profile</td>
+						<td>
+							<a href='javascript:void(0);' onclick='open_window("system_0401.html", "", "Profile")'><img src="images/edit.png" class="edit"/></a>
+						</td>
+					</tr>
+					<tr>
+						<td>Genlock
+							<a data-toggle="modal" data-target="#ivp_dialog" data-remote="system_genlock.html" onclick="open_window(this, 'Genlock')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-cog" style="float:right;padding:0px"></a>
+						</td>
+					</tr-->
+					<tr>
+						<td>Device Information
+							<a data-toggle="modal" data-target="#ivp_dialog" data-remote="diagnosis_0101.html" onclick="open_window(this, 'Device Information')" href="javascript:void(0)" class="btn-lg glyphicon glyphicon-search" style="float:right;padding:0px"></a>
+						</td>
+					</tr>
+				</table>	
+			</td>
+			<td name="list_input" style="padding:0px;"></td>
+			<td class="visible-xs btn-lg" style="width:15px;padding:0px;vertical-align:middle;">
+				<div><a name="slider" href="javascript:void(0)" style="border-bottom-right-radius:5px;border-top-right-radius:5px;padding-top:20px;padding-bottom:20px;background-color:#ddd" class="glyphicon glyphicon-chevron-left" onclick="adapter_page(this)"></a></div>
+			</td>
+			<td name="list_output" style="padding:0px;" class="hidden-xs"></td>
+		</tr>
+	</table>
+</div>
+</form>
+<div id="ivp_dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="ivp_title" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="ivp_title">System</h4>
+			</div>
+			<div class="modal-body">
+				<Iframe id="i_open" scrolling="auto" frameborder="0" style="overflow-x:hidden;width:100%;min-height:350px;"></iframe>
+			</div>
+			<!--div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary">Save changes</button>
+			</div-->
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div>
+</body>
+</html>
